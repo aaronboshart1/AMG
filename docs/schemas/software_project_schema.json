@@ -1,0 +1,518 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Software Project Schema for AMG",
+  "description": "JSON Schema defining entity types and relationships for tracking software projects in AMG (Graphiti)",
+  "version": "1.0.0",
+  
+  "definitions": {
+    "entity_types": {
+      "software_project": {
+        "type": "object",
+        "description": "Root entity representing a software application or repository",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Project name"
+          },
+          "repo_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Repository URL"
+          },
+          "language": {
+            "type": "string",
+            "description": "Primary programming language"
+          },
+          "framework": {
+            "type": "string",
+            "description": "Main framework"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$",
+            "description": "Semantic version"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "maintenance", "deprecated", "archived"],
+            "default": "active"
+          },
+          "description": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "feature": {
+        "type": "object",
+        "description": "A major capability or functional area",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["planned", "in_progress", "completed", "deprecated"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "release_version": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "component": {
+        "type": "object",
+        "description": "An architectural component, service, or module",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["service", "module", "library", "package", "plugin"]
+          },
+          "path": {
+            "type": "string",
+            "description": "File system path"
+          },
+          "language": {
+            "type": "string"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "api_endpoint": {
+        "type": "object",
+        "description": "A REST, GraphQL, or other API endpoint",
+        "required": ["name", "path"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/.*"
+          },
+          "auth_required": {
+            "type": "boolean",
+            "default": false
+          },
+          "request_schema": {
+            "type": "object"
+          },
+          "response_schema": {
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "data_model": {
+        "type": "object",
+        "description": "A database table, schema, or data structure",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "storage_type": {
+            "type": "string",
+            "enum": ["sql", "nosql", "graph", "file", "memory"]
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "indexes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "fields": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "unique": { "type": "boolean" }
+              }
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "integration": {
+        "type": "object",
+        "description": "An external service or API integration",
+        "required": ["name", "service_name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "service_name": {
+            "type": "string"
+          },
+          "auth_type": {
+            "type": "string",
+            "enum": ["api_key", "oauth2", "basic", "none"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "deprecated", "planned"]
+          },
+          "config_keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "configuration": {
+        "type": "object",
+        "description": "A configuration option or environment variable",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "default_value": {},
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["global", "component", "environment"]
+          },
+          "sensitive": {
+            "type": "boolean",
+            "default": false
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "release": {
+        "type": "object",
+        "description": "A version release",
+        "required": ["name", "version"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changelog": {
+            "type": "string"
+          },
+          "breaking_changes": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      
+      "issue": {
+        "type": "object",
+        "description": "A bug report, feature request, or task",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "issue_number": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "in_progress", "closed", "wontfix"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assignee": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "pull_request": {
+        "type": "object",
+        "description": "A code change request",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "pr_number": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "open", "merged", "closed"]
+          },
+          "source_branch": {
+            "type": "string"
+          },
+          "target_branch": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          }
+        }
+      },
+      
+      "developer": {
+        "type": "object",
+        "description": "A project contributor",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "github_handle": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["maintainer", "contributor", "reviewer"]
+          },
+          "expertise": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      
+      "team": {
+        "type": "object",
+        "description": "A group of developers",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "focus_area": {
+            "type": "string"
+          },
+          "lead": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    
+    "relationship_types": {
+      "project_structure": [
+        {
+          "type": "has_feature",
+          "source": "software_project",
+          "target": "feature",
+          "description": "Project contains feature"
+        },
+        {
+          "type": "has_component",
+          "source": "software_project",
+          "target": "component",
+          "description": "Project contains component"
+        },
+        {
+          "type": "contains",
+          "source": "component",
+          "target": "component",
+          "description": "Component contains sub-component"
+        },
+        {
+          "type": "depends_on",
+          "source": "component",
+          "target": "component",
+          "description": "Component depends on another"
+        },
+        {
+          "type": "implements",
+          "source": "component",
+          "target": "feature",
+          "description": "Component implements feature"
+        }
+      ],
+      
+      "api_data": [
+        {
+          "type": "exposes",
+          "source": "component",
+          "target": "api_endpoint",
+          "description": "Component exposes endpoint"
+        },
+        {
+          "type": "uses_model",
+          "source": "component",
+          "target": "data_model",
+          "description": "Component uses data model"
+        },
+        {
+          "type": "calls",
+          "source": "api_endpoint",
+          "target": "api_endpoint",
+          "description": "Endpoint calls another"
+        },
+        {
+          "type": "stores_in",
+          "source": "data_model",
+          "target": "integration",
+          "description": "Model stored in service"
+        }
+      ],
+      
+      "integration": [
+        {
+          "type": "integrates_with",
+          "source": "software_project",
+          "target": "integration",
+          "description": "Project uses integration"
+        },
+        {
+          "type": "requires_config",
+          "source": "integration",
+          "target": "configuration",
+          "description": "Integration needs config"
+        },
+        {
+          "type": "provides",
+          "source": "integration",
+          "target": "feature",
+          "description": "Integration enables feature"
+        }
+      ],
+      
+      "lifecycle": [
+        {
+          "type": "implemented_in",
+          "source": "feature",
+          "target": "release",
+          "description": "Feature released in version"
+        },
+        {
+          "type": "fixes",
+          "source": "pull_request",
+          "target": "issue",
+          "description": "PR fixes issue"
+        },
+        {
+          "type": "addresses",
+          "source": "release",
+          "target": "issue",
+          "description": "Release addresses issue"
+        },
+        {
+          "type": "blocks",
+          "source": "issue",
+          "target": "issue",
+          "description": "Issue blocks another"
+        },
+        {
+          "type": "related_to",
+          "source": "issue",
+          "target": "issue",
+          "description": "Issues are related"
+        }
+      ],
+      
+      "team": [
+        {
+          "type": "contributed_by",
+          "source": "component",
+          "target": "developer",
+          "description": "Developer built component"
+        },
+        {
+          "type": "maintains",
+          "source": "developer",
+          "target": "component",
+          "description": "Developer maintains component"
+        },
+        {
+          "type": "member_of",
+          "source": "developer",
+          "target": "team",
+          "description": "Developer belongs to team"
+        },
+        {
+          "type": "owns",
+          "source": "team",
+          "target": "component",
+          "description": "Team owns component"
+        },
+        {
+          "type": "reviewed_by",
+          "source": "pull_request",
+          "target": "developer",
+          "description": "Developer reviewed PR"
+        },
+        {
+          "type": "authored_by",
+          "source": "pull_request",
+          "target": "developer",
+          "description": "Developer authored PR"
+        }
+      ]
+    }
+  }
+}
